@@ -32,7 +32,7 @@ from utilsforecast.compat import DataFrame, pl_DataFrame, pl_Series
 from utilsforecast.grouped_array import GroupedArray as BaseGroupedArray
 from utilsforecast.validation import ensure_time_dtype, validate_freq
 
-from python.statsforecast.tracer import tracer
+from .tracer import tracer
 from .utils import ConformalIntervals, _ensure_float
 
 # %% ../../nbs/src/core/core.ipynb 7
