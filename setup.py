@@ -44,6 +44,7 @@ spark_requirements = cfg['spark_requirements'].split()
 plotly_requirements = cfg['plotly_requirements'].split()
 polars_requirements = cfg['polars_requirements'].split()
 dev_requirements = cfg['dev_requirements'].split()
+print(f"dask: {dask_requirements}")
 all_requirements = [
     *dask_requirements,
     *spark_requirements,

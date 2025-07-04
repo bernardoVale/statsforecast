@@ -32,6 +32,7 @@ from utilsforecast.compat import DataFrame, pl_DataFrame, pl_Series
 from utilsforecast.grouped_array import GroupedArray as BaseGroupedArray
 from utilsforecast.validation import ensure_time_dtype, validate_freq
 
+from python.statsforecast.tracer import tracer
 from .utils import ConformalIntervals, _ensure_float
 
 # %% ../../nbs/src/core/core.ipynb 7
@@ -1544,8 +1545,10 @@ class StatsForecast(_StatsForecast):
                 target_col=target_col,
             )
         assert df is not None
-        engine = make_execution_engine(infer_by=[df])
-        self._backend = make_backend(engine)
+        with tracer.start_as_current_span("forecast.make_execution_engine"):
+            engine = make_execution_engine(infer_by=[df])
+        with tracer.start_as_current_span("forecast.make_backend"):
+            self._backend = make_backend(engine)
         return self._backend.forecast(
             models=self.models,
             fallback_model=self.fallback_model,
