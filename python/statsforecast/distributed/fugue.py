@@ -22,6 +22,8 @@ from statsforecast.core import (
     _param_descriptions,
     make_backend,
 )
+
+from ..tracer import tracer
 from ..utils import ConformalIntervals
 
 # %% ../../../nbs/src/core/distributed.fugue.ipynb 5
@@ -373,22 +375,25 @@ class FugueBackend(ParallelBackend):
             else:
                 res = _cotransform(df, X_df, self._forecast_X, **tfm_kwargs)
         else:
-            if X_df is None:
-                res_with_fitted = transform(df, self._forecast_noX_fitted, **tfm_kwargs)
-            else:
-                res_with_fitted = _cotransform(
-                    df, X_df, self._forecast_X_fitted, **tfm_kwargs
-                )
+            with tracer.start_as_current_span("fugue.transform"):
+                if X_df is None:
+                    res_with_fitted = transform(df, self._forecast_noX_fitted, **tfm_kwargs)
+                else:
+                    res_with_fitted = _cotransform(
+                        df, X_df, self._forecast_X_fitted, **tfm_kwargs
+                    )
             # the persist here avoids recomputing the whole thing
             # when retrieving the fitted values
-            self._results = fa.persist(res_with_fitted)
-            res = transform(
-                self._results,
-                FugueBackend._retrieve_forecast_df,
-                schema=self._fcst_schema,
-                engine=self._engine,
-            )
-        return res
+            with tracer.start_as_current_span("fugue.persist"):
+                self._results = fa.persist(res_with_fitted)
+            with tracer.start_as_current_span("fugue.res.transform"):
+                res = transform(
+                    self._results,
+                    FugueBackend._retrieve_forecast_df,
+                    schema=self._fcst_schema,
+                    engine=self._engine,
+                )
+                return res
 
     forecast.__doc__ = forecast.__doc__.format(**_param_descriptions)  # type: ignore[union-attr]
 

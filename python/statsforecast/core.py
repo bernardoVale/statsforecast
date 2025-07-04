@@ -1549,20 +1549,21 @@ class StatsForecast(_StatsForecast):
             engine = make_execution_engine(infer_by=[df])
         with tracer.start_as_current_span("forecast.make_backend"):
             self._backend = make_backend(engine)
-        return self._backend.forecast(
-            models=self.models,
-            fallback_model=self.fallback_model,
-            freq=self.freq,
-            df=df,
-            h=h,
-            X_df=X_df,
-            level=level,
-            fitted=fitted,
-            prediction_intervals=prediction_intervals,
-            id_col=id_col,
-            time_col=time_col,
-            target_col=target_col,
-        )
+        with tracer.start_as_current_span("forecast.forecast"):
+            return self._backend.forecast(
+                models=self.models,
+                fallback_model=self.fallback_model,
+                freq=self.freq,
+                df=df,
+                h=h,
+                X_df=X_df,
+                level=level,
+                fitted=fitted,
+                prediction_intervals=prediction_intervals,
+                id_col=id_col,
+                time_col=time_col,
+                target_col=target_col,
+            )
 
     def forecast_fitted_values(self):
         if hasattr(self, "_backend"):
